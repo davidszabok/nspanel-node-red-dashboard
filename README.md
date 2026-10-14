@@ -4,6 +4,8 @@ Egy 480×480 képpontra tervezett, UIBUILDER-alapú otthonfelügyeleti felület 
 
 A projekt a UI forrását és a Node-RED oldali állapot-visszaküldő javítást külön őrzi a teljes HVAC flow-tól. Minden személynév és belső hálózati cím semleges mintára lett cserélve.
 
+![NSPanel UI előnézet mintaadatokkal](assets/UI-elonezet.jpg)
+
 ## Fő képességek
 
 - reszponzív, 480×480-ra optimalizált, sötét „glass” felület;
@@ -27,6 +29,8 @@ src/
   replay-function.js      socketre célzott visszaküldés
   preview.html            önálló látványterv mintaadatokkal
   ELLENORZES.txt          szimulált ellenőrzések eredménye
+assets/
+  UI-elonezet.jpg         képernyőkép mintaadatokkal
 docs/
   INSTALLATION_HU.md
   DATA_CONTRACT_HU.md
