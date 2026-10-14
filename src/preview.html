@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=3" />
+  <title>NSPanel – MINTAADATOS ELŐNÉZET</title>
+<style>/* iHost NS Panel Pro — index.css */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+}
+
+:root {
+    --bg: #0c0d14;
+    --card: #111422;
+    --cb: rgba(255, 255, 255, 0.08);
+    --txt: #cdd4e8;
+    --muted: #2e334d;
+    --muted2: #4e566e;
+    --warm: #ffb030;
+    --warm-g: rgba(255, 176, 48, 0.75);
+    --warm-s: rgba(255, 176, 48, 0.13);
+    --cool: #38c8f0;
+    --cool-g: rgba(56, 200, 240, 0.7);
+    --cool-s: rgba(56, 200, 240, 0.1);
+    --heat: #ff4218;
+    --heat-g: rgba(255, 66, 24, 0.7);
+    --heat-s: rgba(255, 66, 24, 0.09);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Outfit', sans-serif;
+}
+
+html,
+body {
+    width: 480px;
+    height: 480px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans)
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");
+    opacity: .5;
+    mix-blend-mode: overlay
+}
+
+.bg-amb {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden
+}
+
+.ba1 {
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    bottom: -120px;
+    left: -80px;
+    background: radial-gradient(circle, rgba(255, 80, 30, .07), transparent 62%)
+}
+
+.ba2 {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    top: -90px;
+    right: -60px;
+    background: radial-gradient(circle, rgba(56, 200, 240, .055), transparent 62%)
+}
+
+.ba3 {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    bottom: 80px;
+    right: 20px;
+    background: radial-gradient(circle, rgba(167, 139, 250, .04), transparent 62%)
+}
+
+.screen {
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    height: 480px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px
+}
+
+/* TOP BAR */
+.topbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .015));
+    border: 1px solid var(--cb);
+    border-radius: 10px
+}
+
+.tb-time {
+    font-family: var(--mono);
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1;
+    background: linear-gradient(90deg, #e8eeff, #8899cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent
+}
+
+.tb-date {
+    font-size: 8.5px;
+    color: var(--muted2);
+    letter-spacing: .05em;
+    margin-top: 1.5px;
+    text-transform: uppercase
+}
+
+.tb-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px
+}
+
+.tb-upd-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted2)
+}
+
+.live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 7px rgba(74, 222, 128, 0.8);
+    animation: blink 2.2s ease-in-out infinite
+}
+
+.live-dot.stale {
+    background: var(--heat);
+    box-shadow: 0 0 7px var(--heat)
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1
+    }
+
+    50% {
+        opacity: .2
+    }
+}
+
+.tb-upd-time {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #c8d8ff, #8899cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent
+}
+
+/* FORECAST */
+.forecast {
+    flex-shrink: 0;
+    padding: 6px 8px 5px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .015));
+    border: 1px solid var(--cb);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden
+}
+
+.forecast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 176, 48, .5), transparent)
+}
+
+.fc-row {
+    display: flex;
+    gap: 3px
+}
+
+.fc-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 3px 1px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, .028);
+    border: 1px solid rgba(255, 255, 255, .055)
+}
+
+.fc-t {
+    font-family: var(--mono);
+    font-size: 7.5px;
+    color: var(--muted2)
+}
+
+.fc-i {
+    font-size: 14px;
+    line-height: 1.3
+}
+
+.fc-c {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    background: linear-gradient(180deg, #7ee8ff, #38c8f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent
+}
+
+.fc-p {
+    font-family: var(--mono);
+    font-size: 7px;
+    color: var(--muted2)
+}
+
+.fc-meta {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, .045);
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted2)
+}
+
+.fc-meta-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    justify-content: center
+}
+
+.fc-meta-group+.fc-meta-group {
+    border-left: 1px solid rgba(255, 255, 255, .07)
+}
+
+.fc-meta b {
+    color: var(--txt);
+    font-weight: 500
+}
+
+.fc-sep {
+    color: rgba(255, 255, 255, .1)
+}
+
+.fc-sun-val {
+    color: #ffcc70;
+    font-weight: 500
+}
+
+/* ZONE GRID */
+.zone-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr 1fr;
+    gap: 5px
+}
+
+/* CARD BASE */
+.zcard {
+    border-radius: 11px;
+    background: var(--card);
+    border: 1px solid var(--cb);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 7px 11px;
+    gap: 3px;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+/* OUTDOOR */
+.zcard.z-outdoor {
+    grid-column: 1/-1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px
+}
+
+.zout-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0
+}
+
+.zout-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #dde4f5;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 1px
+}
+
+.zout-temp {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    background: linear-gradient(160deg, #9ee8ff, #38c8f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(56, 200, 240, .5))
+}
+
+.zout-meta {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    color: var(--muted2);
+    display: flex;
+    gap: 6px
+}
+
+.zout-meta span {
+    color: #78a8d8
+}
+
+.zout-hint {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 5px 10px;
+    background: rgba(56, 200, 240, .06);
+    border: 1px solid rgba(56, 200, 240, .13);
+    border-radius: 8px;
+    font-family: var(--mono)
+}
+
+.hint-ico {
+    font-size: 16px;
+    line-height: 1
+}
+
+.hint-txt {
+    font-size: 9.5px;
+    color: #8bbcce
+}
+
+.zout-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+    flex-shrink: 0
+}
+
+.zout-wind {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    color: var(--muted2);
+    text-align: right
+}
+
+.zout-wind span {
+    color: #78a8d8
+}
+
+/* NAPPALI */
+.zcard.z-nappali {
+    grid-column: 1/-1
+}
+
+.zc-nappali-body {
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+.znap-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0
+}
+
+.klima-hint {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    border: 1px solid rgba(255, 255, 255, .07);
+    background: rgba(255, 255, 255, .04);
+    color: var(--muted2);
+    white-space: nowrap
+}
+
+.klima-hint.kh-cool {
+    background: linear-gradient(90deg, rgba(56, 200, 240, .09), rgba(56, 200, 240, .03));
+    border-color: rgba(56, 200, 240, .18);
+    color: var(--cool)
+}
+
+.klima-hint.kh-heat {
+    background: linear-gradient(90deg, rgba(255, 66, 24, .09), rgba(255, 66, 24, .03));
+    border-color: rgba(255, 66, 24, .18);
+    color: #ff8060
+}
+
+.kh-ico {
+    font-size: 14px;
+    line-height: 1
+}
+
+.kh-label {
+    font-size: 7px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-right: 1px
+}
+
+.kh-state {
+    font-size: 9px
+}
+
+/* hőfok jobbra, mint a kis kártyákon */
+.zc-nappali-body>.zc-temp {
+    flex-shrink: 0;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -.02em
+}
+
+/* SMALL */
+.zcard.z-small .zc-name {
+    font-size: 14px
+}
+
+.zcard.z-small .zc-temp {
+    font-size: 20px
+}
+
+/* TOP SEGMENTS */
+.top-segs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 1px;
+    height: 2px;
+    border-radius: 11px 11px 0 0;
+    overflow: hidden
+}
+
+.seg {
+    flex: 1;
+    background: transparent;
+    transition: background .4s, box-shadow .4s
+}
+
+.seg.on {
+    background: var(--warm);
+    box-shadow: 0 0 12px 3px var(--warm-g)
+}
+
+.top-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    pointer-events: none;
+    background: linear-gradient(180deg, var(--warm-s) 0%, transparent 100%);
+    border-radius: 11px 11px 0 0;
+    opacity: 0;
+    transition: opacity .5s
+}
+
+.zcard.any-on .top-glow {
+    opacity: 1
+}
+
+/* BOTTOM GLOW */
+.bot-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 0 0 11px 11px;
+    background: transparent;
+    transition: background .5s, box-shadow .5s
+}
+
+.bot-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    pointer-events: none;
+    border-radius: 0 0 11px 11px;
+    opacity: 0;
+    transition: opacity .5s
+}
+
+.zcard.g-heat .bot-strip {
+    background: var(--heat);
+    box-shadow: 0 0 14px 3px var(--heat-g), 0 -3px 22px var(--heat-g)
+}
+
+.zcard.g-heat .bot-fill {
+    background: linear-gradient(to top, var(--heat-s), transparent);
+    opacity: 1
+}
+
+.zcard.g-cool .bot-strip {
+    background: var(--cool);
+    box-shadow: 0 0 14px 3px var(--cool-g), 0 -3px 22px var(--cool-g)
+}
+
+.zcard.g-cool .bot-fill {
+    background: linear-gradient(to top, var(--cool-s), transparent);
+    opacity: 1
+}
+
+.zcard.g-cold .bot-strip {
+    background: var(--cool);
+    box-shadow: 0 0 10px 2px var(--cool-g), 0 -2px 16px var(--cool-g)
+}
+
+.zcard.g-cold .bot-fill {
+    background: linear-gradient(to top, var(--cool-s), transparent);
+    opacity: .85
+}
+
+.zcard.g-mild .bot-strip {
+    background: var(--warm);
+    box-shadow: 0 0 10px 2px var(--warm-g), 0 -2px 16px var(--warm-g)
+}
+
+.zcard.g-mild .bot-fill {
+    background: linear-gradient(to top, var(--warm-s), transparent);
+    opacity: .7
+}
+
+.zcard.g-hot .bot-strip {
+    background: var(--heat);
+    box-shadow: 0 0 10px 2px var(--heat-g), 0 -2px 16px var(--heat-g)
+}
+
+.zcard.g-hot .bot-fill {
+    background: linear-gradient(to top, var(--heat-s), transparent);
+    opacity: .8
+}
+
+.zcard.g-heat {
+    background-image: radial-gradient(ellipse at 50% 100%, rgba(255, 66, 24, .07) 0%, transparent 65%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+.zcard.g-cool {
+    background-image: radial-gradient(ellipse at 50% 100%, rgba(56, 200, 240, .06) 0%, transparent 65%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+.zcard.g-cold {
+    background-image: radial-gradient(ellipse at 50% 100%, rgba(56, 200, 240, .055) 0%, transparent 65%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+.zcard.g-mild {
+    background-image: radial-gradient(ellipse at 50% 100%, rgba(255, 176, 48, .055) 0%, transparent 65%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+.zcard.g-hot {
+    background-image: radial-gradient(ellipse at 50% 100%, rgba(255, 66, 24, .065) 0%, transparent 65%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .02) 0%, transparent 60%)
+}
+
+.zcard.any-on {
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(255, 176, 48, .055) 0%, transparent 55%), radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, .015) 0%, transparent 60%)
+}
+
+/* SHARED CONTENT */
+.zc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline
+}
+
+.zc-name {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .005em;
+    color: #dde4f5
+}
+
+.zc-temp {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    transition: color .4s
+}
+
+.tc-hot {
+    background: linear-gradient(160deg, #ffd0a0, #ff8060);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(255, 128, 96, .4))
+}
+
+.tc-warm {
+    background: linear-gradient(160deg, #e0f4c0, #b0dc80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent
+}
+
+.tc-norm {
+    color: #c8d4ec;
+    -webkit-text-fill-color: #c8d4ec
+}
+
+.tc-none {
+    color: var(--muted2);
+    -webkit-text-fill-color: var(--muted2)
+}
+
+.zc-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted2);
+    line-height: 1;
+    margin-top: 1px
+}
+
+.mv {
+    color: #78a8d8
+}
+
+.msep {
+    color: var(--muted);
+    margin: 0 1px
+}
+
+.mbat-low {
+    color: #f87171 !important
+}
+
+/* ANIMATIONS — csak az első megjelenésre */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px)
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
+}
+
+.zcard {
+    animation: fadeUp .38s ease both
+}
+
+.zcard:nth-child(1) {
+    animation-delay: .04s
+}
+
+.zcard:nth-child(2) {
+    animation-delay: .09s
+}
+
+.zcard:nth-child(3) {
+    animation-delay: .12s
+}
+
+.zcard:nth-child(4) {
+    animation-delay: .15s
+}
+
+.zcard:nth-child(5) {
+    animation-delay: .18s
+}
+
+.zcard:nth-child(6) {
+    animation-delay: .21s
+}
+/* 2026 refresh: local fonts, higher contrast, explicit states, compact 480px layout. */
+:root { --muted2: #98a5bc; --muted: #64718a; --sans: Arial, sans-serif; --mono: Consolas, monospace; }
+html, body { width: 100%; min-height: 100%; height: auto; overflow: auto; }
+body::after, .bg-amb { display: none; }
+.screen { width: 100%; max-width: 640px; height: 100vh; min-height: 480px; margin: auto; }
+.topbar { padding: 4px 10px; }
+.tb-date { font-size: 10px; }
+.tb-upd-label { font-size: 10px; }
+.tb-upd-time { font-size: 11px; }
+#refresh-state { background: #202d43; color: #dce7fa; border: 1px solid #465774; border-radius: 5px; padding: 5px 8px; font-size: 10px; cursor: pointer; }
+#refresh-state:focus-visible { outline: 2px solid #38c8f0; }
+.live-dot { animation: none; }
+.heating-bar { flex-shrink: 0; font-size: 11px; line-height: 15px; padding: 4px 9px; background: #182131; border-radius: 7px; color: #bdcce2; }
+.heating-bar.active { background: #362119; color: #ffc4a0; }
+.fc-t, .fc-p { font-size: 10px; }
+.fc-c { font-size: 12px; }
+.fc-meta { font-size: 10px; }
+.fc-p { min-height: 11px; }
+.forecast { padding: 4px 7px; }
+.fc-item { padding: 1px; }
+.fc-meta { margin-top: 2px; padding-top: 2px; }
+.zone-grid { grid-template-rows: 66px 1fr 1fr 1fr; }
+.zcard { padding: 5px 9px; animation: none; }
+.zcard.z-small .zc-name { font-size: 13px; }
+.zcard.z-small .zc-temp { font-size: 21px; }
+.zc-meta, .zout-wind, .zout-meta { font-size: 10px; }
+.klima-hint { min-width: 0; padding: 4px; white-space: normal; }
+.kh-label { display: block; font-size: 9px; }
+.kh-state { font-size: 10px; }
+.zc-nappali-body { gap: 6px; }
+.hint-txt { font-size: 10px; }
+.zcard.data-stale { border: 1px dashed #dca65b; }
+.zcard.data-offline { border-color: #f87171; }
+.data-stale .zc-temp, .data-stale .zout-temp { opacity: .65; }
+.sensor-note { color: #e6b775; font-size: 9px; line-height: 11px; }
+.data-offline .sensor-note { color: #ff9c9c; }
+.seg.unknown { background: #566176; opacity: .45; }
+@media (max-width: 420px) { .screen { min-height: 560px; } .zc-nappali-body { flex-wrap: wrap; } .klima-hint { order: 3; flex-basis: 100%; } .zout-hint { padding: 3px; } .hint-ico { display: none; } }
+</style>
+</head>
+
+<body>
+
+  <div class="bg-amb">
+    <div class="ba1"></div>
+    <div class="ba2"></div>
+    <div class="ba3"></div>
+  </div>
+
+  <div class="screen">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div>
+        <div class="tb-time" id="clock">00:00</div>
+        <div class="tb-date" id="dateline">—</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-upd-label"><span class="live-dot stale" id="live-dot"></span><span id="connection-status" role="status">Kapcsolódás…</span></div>
+        <div class="tb-upd-time" id="last-update">—</div>
+        <button id="refresh-state" type="button">Adatok újrakérése</button>
+      </div>
+    </div>
+
+    <div class="heating-bar" id="heating-status">Fűtésadatokra vár…</div>
+
+    <!-- FORECAST -->
+    <div class="forecast">
+      <div class="fc-row">
+        <div class="fc-item" id="fc-0">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-1">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-2">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-3">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-4">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-5">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+      </div>
+      <div class="fc-meta">
+        <div class="fc-meta-group">
+          <span>▼ <b id="fc-min">—</b></span>
+          <span class="fc-sep">·</span>
+          <span>▲ <b id="fc-max">—</b></span>
+        </div>
+        <div class="fc-meta-group">
+          <span>🌅 <span class="fc-sun-val" id="fc-sunrise">—</span></span>
+          <span class="fc-sep">·</span>
+          <span>🌇 <span class="fc-sun-val" id="fc-sunset">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONE GRID — statikus HTML, JS csak az adatokat frissíti -->
+    <div class="zone-grid">
+
+      <!-- KÜLTÉR — 2 szegmens: Kültér B · Kültér A -->
+      <div class="zcard z-outdoor g-mild" id="z-kulter">
+        <div class="top-segs">
+          <div class="seg" id="seg-kulter-0"></div>
+          <div class="seg" id="seg-kulter-1"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zout-left">
+          <div class="zout-name">Kültér</div>
+          <div class="zout-temp" id="z-kulter-temp">—</div>
+          <div class="zout-meta">💧<span id="z-kulter-rh">—</span></div>
+        </div>
+        <div class="zout-hint">
+          <span class="hint-ico" id="z-kulter-hico">❓</span>
+          <span class="hint-txt" id="z-kulter-htxt">—</span>
+        </div>
+        <div class="zout-right">
+          <div class="zout-wind">💨 <span id="z-kulter-wind">—</span></div>
+          <div class="zout-wind">⬆ <span id="z-kulter-gust">—</span></div>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- NAPPALI — 5 szegmens: Előszoba · Étkező · Konyha · Nappali · Dolgozó -->
+      <div class="zcard z-nappali" id="z-nappali">
+        <div class="top-segs">
+          <div class="seg" id="seg-nap-0"></div>
+          <div class="seg" id="seg-nap-1"></div>
+          <div class="seg" id="seg-nap-2"></div>
+          <div class="seg" id="seg-nap-3"></div>
+          <div class="seg" id="seg-nap-4"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-nappali-body">
+          <div class="znap-left">
+            <div class="zc-head">
+              <span class="zc-name">Nappali</span>
+            </div>
+            <div class="zc-meta">
+              💧<span class="mv" id="z-nappali-rh">—</span>
+              <span class="msep">·</span>
+              🔋<span class="mv" id="z-nappali-bat">—</span>
+            </div>
+          </div>
+          <div class="klima-hint" id="z-nappali-kh">
+            <span class="kh-ico" id="z-nappali-khico">○</span>
+            <span>
+            <span class="kh-label">Klíma</span>
+            <span class="kh-state" id="z-nappali-khstate">—</span>
+            </span>
+          </div>
+          <span class="zc-temp tc-none" id="z-nappali-temp">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- HÁLÓSZOBA — 2 szegmens: Háló 01 · Háló 02 -->
+      <div class="zcard z-small" id="z-halo">
+        <div class="top-segs">
+          <div class="seg" id="seg-halo-0"></div>
+          <div class="seg" id="seg-halo-1"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Hálószoba</span>
+          <span class="zc-temp tc-none" id="z-halo-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-halo-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-halo-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- GYEREKSZOBA — 1 szegmens -->
+      <div class="zcard z-small" id="z-gyerek">
+        <div class="top-segs">
+          <div class="seg" id="seg-gyerek-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Gyerekszoba</span>
+          <span class="zc-temp tc-none" id="z-gyerek-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-gyerek-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-gyerek-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- FÜRDŐSZOBA — 1 szegmens -->
+      <div class="zcard z-small" id="z-furdo">
+        <div class="top-segs">
+          <div class="seg" id="seg-furdo-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Fürdőszoba</span>
+          <span class="zc-temp tc-none" id="z-furdo-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-furdo-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-furdo-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- WC — 1 szegmens -->
+      <div class="zcard z-small" id="z-wc">
+        <div class="top-segs">
+          <div class="seg" id="seg-wc-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">WC</span>
+          <span class="zc-temp tc-none" id="z-wc-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-wc-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-wc-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+    </div><!-- /zone-grid -->
+  </div><!-- /screen -->
+
+  <script>
+const demoNow=Date.now();
+const demoPayload={_ts:demoNow,_updated:{weather:demoNow,ac:demoNow,th:{},switches:{}},weather:{temp:9.4,humidity:74,wind:12,gust:21,sunrise:'06:42',sunset:'18:21',forecast:Array.from({length:6},(_,i)=>({time:'2026-10-01T'+String(9+i).padStart(2,'0')+':00',temp:10+i*.7,code:i%3,pop:i===4?25:0}))},ac:{power:true,mode:1,roomTemp:22.1,setTemp:23,offline:false},sensors:{th:{},switches:{futes:{'Kazán':true,'Szivattyú':true,'Nappali fűtéskör':true,'Hálószoba fűtéskör':false,'Gyerekszoba fűtéskör':true,'Fürdőszoba fűtéskör':false,'WC fűtéskör':false}}}};
+["nappali","halo","gyerek","furdo","wc"].forEach((id,i)=>{demoPayload.sensors.th[id]={temp:22+i*.3,hum:46+i*2,battery:80-i*10,online:true};demoPayload._updated.th[id]=demoNow;demoPayload._updated.switches[id]=demoNow;});
+demoPayload._updated.switches.futes=Object.fromEntries(Object.keys(demoPayload.sensors.switches.futes).map(k=>[k,demoNow]));
+const demoHandlers={};
+window.uibuilder={get:k=>k==='ioConnected'?true:undefined,onChange:(k,f)=>demoHandlers[k]=f,send:()=>setTimeout(()=>demoHandlers.msg({payload:demoPayload}),10)};
+</script>
+  <script>// iHost NS Panel Pro — index.js  v2.0
+// Unifier v5.1 struktúrához igazítva:
+//   payload.weather   → {temp, humidity, wind, gust, code, sunrise, sunset, tempMax, tempMin, forecast[]}
+//   payload.ac        → {power, standby, offline, roomTemp, setTemp, mode}
+//   payload.sensors   → {th:{nappali,halo,...}, switches:{...}, shutters:{...}}
+//   payload.lights    → {bulbs:{...}, controllers:{...}}
+'use strict';
+
+const WX = {
+    0: "☀️", 1: "🌤", 2: "⛅", 3: "🌥", 45: "🌫", 48: "🌫",
+    51: "🌦", 53: "🌦", 55: "🌧", 61: "🌧", 63: "🌧", 65: "🌧",
+    71: "🌨", 73: "🌨", 75: "❄️", 80: "🌦", 81: "🌧", 82: "⛈", 95: "⛈", 99: "⛈"
+};
+const WX_NIGHT = { 0: "🌙", 1: "🌙", 2: "☁️", 3: "🌥" };
+
+function wxIcon(code, timeStr) {
+    if (timeStr) {
+        const h = parseInt(timeStr.slice(11, 13), 10);
+        if (h >= 20 || h < 6) return WX_NIGHT[code] || WX[code] || "🌡";
+    }
+    return WX[code] || "🌡";
+}
+function fmt2(n) { return String(n).padStart(2, "0"); }
+function outdoorGlowCls(t) {
+    if (t == null) return "g-mild";
+    return t <= 5 ? "g-cold" : t <= 18 ? "g-mild" : "g-hot";
+}
+function tempCls(t) {
+    if (t == null) return "tc-none";
+    if (t >= 24) return "tc-hot";
+    if (t >= 22) return "tc-warm";
+    return "tc-norm";
+}
+function clothingHint(t) {
+    if (t == null) return { ico: "❓", txt: "Ismeretlen" };
+    if (t <= 0) return { ico: "🥶", txt: "Fagyos, vastag téli ruha" };
+    if (t <= 5) return { ico: "🧥", txt: "Hideg, kabát szükséges" };
+    if (t <= 10) return { ico: "🧥", txt: "Hűvös, kabát ajánlott" };
+    if (t <= 18) return { ico: "🙂", txt: "Vedd fel a kabátod" };
+    if (t <= 24) return { ico: "😊", txt: "Kellemes, könnyű öltözék" };
+    return { ico: "☀️", txt: "Meleg, nyári ruha" };
+}
+function setClass(el, prefix, cls) {
+    if (!el) return;
+    el.classList.forEach(c => { if (c.startsWith(prefix)) el.classList.remove(c); });
+    if (cls) el.classList.add(cls);
+}
+
+// ── SZEGMENS MAPPING ─────────────────────────────────────────
+// sensors.switches[room][label] = true/false
+const SEG_MAP = [
+    { room: "eloszoba", label: "Kültér B", segId: "seg-kulter-0" },
+    { room: "nappali", label: "Kültér A", segId: "seg-kulter-1" },
+    { room: "eloszoba", label: "Előszoba", segId: "seg-nap-0" },
+    { room: "eloszoba", label: "Étkező", segId: "seg-nap-1" },
+    { room: "eloszoba", label: "Konyha", segId: "seg-nap-2" },
+    { room: "nappali", label: "Nappali", segId: "seg-nap-3" },
+    { room: "nappali", label: "Dolgozó", segId: "seg-nap-4" },
+    { room: "halo", label: "Háló 1", segId: "seg-halo-0" },
+    { room: "halo", label: "Háló 2", segId: "seg-halo-1" },
+    { room: "gyerek", label: "Gyerekszoba", segId: "seg-gyerek-0" },
+    { room: "furdo", label: "Fürdőszoba  világítás", segId: "seg-furdo-0" },
+    { room: "wc", label: "WC világítás", segId: "seg-wc-0" },
+];
+const ZONE_SEGS = {
+    kulter: ["seg-kulter-0", "seg-kulter-1"],
+    nappali: ["seg-nap-0", "seg-nap-1", "seg-nap-2", "seg-nap-3", "seg-nap-4"],
+    halo: ["seg-halo-0", "seg-halo-1"],
+    gyerek: ["seg-gyerek-0"],
+    furdo: ["seg-furdo-0"],
+    wc: ["seg-wc-0"],
+};
+const CIRCUIT_MAP = {
+    "Nappali fűtéskör": "nappali",
+    "Hálószoba fűtéskör": "halo",
+    "Gyerekszoba fűtéskör": "gyerek",
+    "Fürdőszoba fűtéskör": "furdo",
+    "WC fűtéskör": "wc",
+};
+const AC_MODES = { 1: "Fűtés", 2: "Hűtés", 3: "Ventilátor", 4: "Száraz", 8: "Auto" };
+
+// ── ELEM REFERENCIÁK ──────────────────────────────────────────
+const R = {};
+function cacheRefs() {
+    R.fcMin = document.getElementById("fc-min");
+    R.fcMax = document.getElementById("fc-max");
+    R.fcSunrise = document.getElementById("fc-sunrise");
+    R.fcSunset = document.getElementById("fc-sunset");
+    R.fc = [];
+    for (let i = 0; i < 6; i++) {
+        const el = document.getElementById("fc-" + i);
+        R.fc.push(el ? {
+            t: el.querySelector(".fc-t"),
+            i: el.querySelector(".fc-i"),
+            c: el.querySelector(".fc-c"),
+            p: el.querySelector(".fc-p")
+        } : null);
+    }
+    R.kulter = {
+        card: document.getElementById("z-kulter"),
+        temp: document.getElementById("z-kulter-temp"),
+        rh: document.getElementById("z-kulter-rh"),
+        hico: document.getElementById("z-kulter-hico"),
+        htxt: document.getElementById("z-kulter-htxt"),
+        wind: document.getElementById("z-kulter-wind"),
+        gust: document.getElementById("z-kulter-gust"),
+    };
+    ["nappali", "halo", "gyerek", "furdo", "wc"].forEach(id => {
+        R[id] = {
+            card: document.getElementById("z-" + id),
+            temp: document.getElementById("z-" + id + "-temp"),
+            rh: document.getElementById("z-" + id + "-rh"),
+            bat: document.getElementById("z-" + id + "-bat"),
+        };
+        if (id === "nappali") {
+            R.nappali.kh = document.getElementById("z-nappali-kh");
+            R.nappali.khico = document.getElementById("z-nappali-khico");
+            R.nappali.khst = document.getElementById("z-nappali-khstate");
+        }
+    });
+    R.segs = {};
+    SEG_MAP.forEach(({ segId }) => { R.segs[segId] = document.getElementById(segId); });
+}
+
+// ── AKTÍV FŰTÉSZÓNÁK ─────────────────────────────────────────
+function computeActiveZones(switches) {
+    const futes = switches.futes || {};
+    const boilerOn = futes["Kazán"] === true;
+    const pumpOn = futes["Szivattyú"] === true;
+    if (!boilerOn || !pumpOn) return [];
+    return Object.entries(futes)
+        .filter(([, state]) => state)
+        .map(([label]) => CIRCUIT_MAP[label])
+        .filter(Boolean);
+}
+
+// ── FŐFRISSÍTŐ ────────────────────────────────────────────────
+function update(payload) {
+    if (!payload) return;
+
+    const w = payload.weather || {};
+    const ac = payload.ac || {};
+    const sensors = payload.sensors || {};
+    const th = sensors.th || {};
+    const switches = sensors.switches || {};
+    const activeZones = computeActiveZones(switches);
+
+    // Snapshot time (connection state is handled separately)
+    if (payload._ts) {
+        const d = new Date(payload._ts);
+        const dot = document.getElementById("live-dot");
+        const lu = document.getElementById("last-update");
+        if (lu) lu.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(fmt2).join(":");
+        if (dot) dot.classList.toggle("stale", (Date.now() - payload._ts) / 60000 > 10);
+    }
+
+    // Forecast
+    const fc = Array.isArray(w.forecast) ? w.forecast : [];
+    const fcTemps = fc.map(h => numeric(h.temp)).filter(t => t != null);
+    if (R.fcMin) R.fcMin.textContent = fcTemps.length ? Math.min(...fcTemps).toFixed(1) + "°" : "—";
+    if (R.fcMax) R.fcMax.textContent = fcTemps.length ? Math.max(...fcTemps).toFixed(1) + "°" : "—";
+    if (R.fcSunrise) R.fcSunrise.textContent = w.sunrise || "—";
+    if (R.fcSunset) R.fcSunset.textContent = w.sunset || "—";
+    Array.from({ length: 6 }, (_, i) => fc[i] || {}).forEach((h, i) => {
+        const r = R.fc[i]; if (!r) return;
+        if (r.t) r.t.textContent = h.time ? h.time.slice(11, 16) : "—";
+        if (r.i) r.i.textContent = wxIcon(h.code, h.time);
+        if (r.c) r.c.textContent = h.temp != null ? numberText(h.temp) + "°" : "—";
+        if (r.p) r.p.textContent = h.pop != null && h.pop > 0 ? h.pop + "%" : "";
+    });
+
+    // Szegmensek
+    SEG_MAP.forEach(({ room, label, segId }) => {
+        const seg = R.segs[segId]; if (!seg) return;
+        seg.classList.toggle("on", (switches[room] || {})[label] === true);
+    });
+    Object.entries(ZONE_SEGS).forEach(([zid, segIds]) => {
+        const card = document.getElementById("z-" + zid); if (!card) return;
+        card.classList.toggle("any-on", segIds.some(sid => R.segs[sid]?.classList.contains("on")));
+    });
+
+    // Kültér
+    {
+        const temp = numeric(w.temp);
+        const rz = R.kulter;
+        const hint = clothingHint(temp);
+        if (rz.temp) rz.temp.textContent = temp != null ? numberText(temp) + "°C" : "—";
+        if (rz.rh) rz.rh.textContent = w.humidity != null ? w.humidity + "%" : "—";
+        if (rz.hico) rz.hico.textContent = hint.ico;
+        if (rz.htxt) rz.htxt.textContent = hint.txt;
+        if (rz.wind) rz.wind.textContent = w.wind != null ? w.wind + " km/h" : "—";
+        if (rz.gust) rz.gust.textContent = w.gust != null ? w.gust + " km/h" : "—";
+        setClass(rz.card, "g-", outdoorGlowCls(temp));
+    }
+
+    // Belső zónák
+    ["nappali", "halo", "gyerek", "furdo", "wc"].forEach(id => {
+        const rz = R[id]; if (!rz?.card) return;
+        const sensor = th[id] || {};
+        const temp = numeric(sensor.temp);
+        const rh = sensor.hum ?? null;
+        const bat = sensor.battery ?? null;
+
+        if (rz.temp) {
+            rz.temp.textContent = temp != null ? numberText(temp) + "°C" : "—";
+            setClass(rz.temp, "tc-", tempCls(temp));
+        }
+        if (rz.rh) rz.rh.textContent = rh != null ? rh + "%" : "—";
+        if (rz.bat) {
+            rz.bat.textContent = bat != null ? bat + "%" : "—";
+            rz.bat.classList.toggle("mbat-low", bat != null && bat <= 20);
+        }
+
+        const isHeat = activeZones.includes(id);
+        const isCool = id === "nappali" && ac.power === true && ac.offline !== true && Number(ac.mode) === 2;
+        setClass(rz.card, "g-", isHeat ? "g-heat" : isCool ? "g-cool" : null);
+
+        // Klíma hint (nappali)
+        if (id === "nappali" && rz.kh) {
+            const on = ac.power === true && ac.offline !== true;
+            const m = Number(ac.mode);
+            setClass(rz.kh, "kh-", on ? (m === 1 ? "kh-heat" : m === 2 ? "kh-cool" : null) : null);
+            if (rz.khico) rz.khico.textContent = on ? (m === 1 ? "🔥" : m === 2 ? "❄️" : "≋") : "○";
+            if (rz.khst) {
+                const roomT = ac.roomTemp != null ? ac.roomTemp + "°C" : "—";
+                rz.khst.textContent = on
+                    ? `${AC_MODES[m] || "—"} · ${ac.setTemp ?? "—"}° · szoba ${roomT}`
+                    : `${ac.offline === true ? "Nem elérhető" : typeof ac.power !== "boolean" ? "Nincs adat" : "Kikapcsolt"} · szoba ${roomT}`;
+            }
+        }
+    });
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────
+const DAYS = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
+const MONTHS = ["január", "február", "március", "április", "május", "június",
+    "július", "augusztus", "szeptember", "október", "november", "december"];
+function updateClock() {
+    const n = new Date();
+    const cl = document.getElementById("clock");
+    const dl = document.getElementById("dateline");
+    if (cl) cl.textContent = fmt2(n.getHours()) + ":" + fmt2(n.getMinutes());
+    if (dl) dl.textContent = `${n.getFullYear()}. ${MONTHS[n.getMonth()]} ${n.getDate()}., ${DAYS[n.getDay()]}`.toUpperCase();
+}
+
+// ── Connection and data freshness ──────────────────────────
+function numeric(value) {
+    if (value == null || value === '' || typeof value === 'boolean') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+}
+function numberText(value) {
+    const n = numeric(value);
+    return n === null ? '—' : n.toFixed(1);
+}
+const CACHE_KEY = 'nspanel-ui-v3:' + location.pathname;
+const ROOM_IDS = ['nappali', 'halo', 'gyerek', 'furdo', 'wc'];
+let lastPayload = null;
+let lastReceived = 0;
+let connected = false;
+let waiting = true;
+let cachedView = false;
+let renderError = false;
+let lastRequest = 0;
+function isSnapshot(p) {
+    return p && typeof p === 'object' && !Array.isArray(p) &&
+        ['weather', 'sensors', 'ac'].some(k => Object.prototype.hasOwnProperty.call(p, k));
+}
+function old(ts, maxAge) {
+    return !Number.isFinite(ts) || ts <= 0 || Date.now() - ts > maxAge || ts > Date.now() + 60000;
+}
+function paintStatus() {
+    const staleTransport = old(lastReceived, 90000);
+    const text = typeof uibuilder === 'undefined' ? 'UI könyvtár nem töltődött be' :
+        renderError ? 'Adatformátum-hiba' : !connected ? 'Nincs kapcsolat' :
+        waiting ? 'Adatokra vár…' : staleTransport ? 'Nincs új adat' : 'Kapcsolat rendben';
+    document.getElementById('connection-status').textContent = text;
+    document.getElementById('live-dot').classList.toggle('stale', !connected || waiting || staleTransport || renderError);
+    if (!lastPayload) return;
+    const stamps = lastPayload._updated || {};
+    ROOM_IDS.forEach(id => {
+        const sensor = ((lastPayload.sensors || {}).th || {})[id] || {};
+        const offline = sensor.online === false;
+        const stale = cachedView || old((stamps.th || {})[id], 120000);
+        R[id].card.classList.toggle('data-stale', stale);
+        R[id].card.classList.toggle('data-offline', offline);
+        document.getElementById('note-' + id).textContent = offline ? 'Szenzor nem elérhető' :
+            cachedView ? 'Mentett adat' : stale ? 'Régi / nem igazolt adat' : '';
+    });
+    R.kulter.card.classList.toggle('data-stale', cachedView || old(stamps.weather, 35 * 60000));
+    const relayStamps = (stamps.switches || {}).futes || {};
+    const relaysFresh = !cachedView && ['Kazán', 'Szivattyú', ...Object.keys(CIRCUIT_MAP)]
+        .every(label => !old(relayStamps[label], 120000));
+    const switches = (lastPayload.sensors || {}).switches || {};
+    const heat = switches.futes || {};
+    const bar = document.getElementById('heating-status');
+    const relayText = key => heat[key] === true ? 'be' : heat[key] === false ? 'ki' : '?';
+    const circuits = Object.keys(CIRCUIT_MAP);
+    const open = circuits.filter(k => heat[k] === true).length;
+    const allKnown = circuits.every(k => typeof heat[k] === 'boolean');
+    bar.textContent = relaysFresh ? `Kazán: ${relayText('Kazán')} · Szivattyú: ${relayText('Szivattyú')} · Nyitott kör: ${open}${allKnown ? '' : '/?'}` :
+        'Fűtés: nincs friss reléadat';
+    bar.classList.toggle('active', relaysFresh && heat['Kazán'] === true && heat['Szivattyú'] === true);
+    if (!relaysFresh) ROOM_IDS.forEach(id => R[id].card.classList.remove('g-heat'));
+    if (cachedView || old(stamps.ac, 35 * 60000)) {
+        R.nappali.card.classList.remove('g-cool');
+        setClass(R.nappali.kh, 'kh-', null);
+        R.nappali.khst.textContent = 'Nincs friss klímaadat';
+        R.nappali.khico.textContent = '○';
+    }
+    SEG_MAP.forEach(({room, label, segId}) => {
+        const stale = cachedView || old(((stamps.switches || {})[room] || {})[label], 120000);
+        R.segs[segId].classList.toggle('unknown', stale);
+        if (stale) R.segs[segId].classList.remove('on');
+    });
+    Object.entries(ZONE_SEGS).forEach(([id, segs]) => {
+        document.getElementById('z-' + id).classList.toggle('any-on', segs.some(s => R.segs[s].classList.contains('on')));
+    });
+    const ts = numeric(lastPayload._ts);
+    document.getElementById('last-update').textContent = ts ?
+        (cachedView ? 'Mentett: ' : 'Adat: ') + new Date(ts).toLocaleTimeString('hu-HU') : 'Időpont ismeretlen';
+}
+function requestState() {
+    if (typeof uibuilder === 'undefined' || !connected || Date.now() - lastRequest < 1500) return;
+    lastRequest = Date.now();
+    try { uibuilder.send({ topic: 'ui/state/request' }); }
+    catch (e) { console.warn('UI állapotlekérés sikertelen', e); }
+}
+function receive(msg) {
+    if (!msg || !isSnapshot(msg.payload)) return;
+    try {
+        update(msg.payload);
+        lastPayload = msg.payload;
+        lastReceived = Date.now();
+        cachedView = false;
+        waiting = false;
+        renderError = false;
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(lastPayload)); } catch (_) { /* storage optional */ }
+    } catch (e) {
+        renderError = true;
+        console.error('UI adatfeldolgozási hiba', e);
+    }
+    paintStatus();
+}
+cacheRefs();
+ROOM_IDS.forEach(id => {
+    const note = document.createElement('div');
+    note.id = 'note-' + id;
+    note.className = 'sensor-note';
+    R[id].card.appendChild(note);
+});
+updateClock();
+try {
+    const saved = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (isSnapshot(saved) && !old(numeric(saved._ts), 24 * 60 * 60000)) {
+        update(saved);
+        lastPayload = saved;
+        cachedView = true;
+    }
+} catch (_) { /* corrupted or unavailable browser cache is not fatal */ }
+document.getElementById('refresh-state').addEventListener('click', () => { waiting = true; requestState(); paintStatus(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { requestState(); paintStatus(); } });
+window.addEventListener('online', requestState);
+if (typeof uibuilder !== 'undefined') {
+    // The supplied v7.5 IIFE starts automatically. Register handlers, then read current state.
+    uibuilder.onChange('msg', receive);
+    uibuilder.onChange('ioConnected', value => {
+        connected = value === true;
+        waiting = true;
+        if (connected) requestState();
+        paintStatus();
+    });
+    connected = uibuilder.get('ioConnected') === true;
+    const existing = uibuilder.get('msg');
+    if (existing) receive(existing);
+    if (connected) requestState();
+}
+paintStatus();
+setInterval(() => {
+    updateClock();
+    paintStatus();
+    // Retry an empty initial state, and verify the channel periodically after recovery.
+    if (waiting || old(lastReceived, 60000)) requestState();
+}, 10000);
+</script>
+<script>document.getElementById('clock').title='MINTAADATOK – nem élő rendszer'; document.getElementById('dateline').style.color='#ffcc70'; setInterval(()=>document.getElementById('dateline').textContent='MINTAADATOK · NEM ÉLŐ KIJELZŐ',100);</script></body>
+
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=3" />
+  <title>iHost NS Panel Pro</title>
+<link rel="stylesheet" href="./index.css?v=20261001b" />
+</head>
+
+<body>
+
+  <div class="bg-amb">
+    <div class="ba1"></div>
+    <div class="ba2"></div>
+    <div class="ba3"></div>
+  </div>
+
+  <div class="screen">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div>
+        <div class="tb-time" id="clock">00:00</div>
+        <div class="tb-date" id="dateline">—</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-upd-label"><span class="live-dot stale" id="live-dot"></span><span id="connection-status" role="status">Kapcsolódás…</span></div>
+        <div class="tb-upd-time" id="last-update">—</div>
+        <button id="refresh-state" type="button">Adatok újrakérése</button>
+      </div>
+    </div>
+
+    <div class="heating-bar" id="heating-status">Fűtésadatokra vár…</div>
+
+    <!-- FORECAST -->
+    <div class="forecast">
+      <div class="fc-row">
+        <div class="fc-item" id="fc-0">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-1">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-2">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-3">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-4">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+        <div class="fc-item" id="fc-5">
+          <div class="fc-t">—</div>
+          <div class="fc-i">🌡</div>
+          <div class="fc-c">—</div>
+          <div class="fc-p"></div>
+        </div>
+      </div>
+      <div class="fc-meta">
+        <div class="fc-meta-group">
+          <span>▼ <b id="fc-min">—</b></span>
+          <span class="fc-sep">·</span>
+          <span>▲ <b id="fc-max">—</b></span>
+        </div>
+        <div class="fc-meta-group">
+          <span>🌅 <span class="fc-sun-val" id="fc-sunrise">—</span></span>
+          <span class="fc-sep">·</span>
+          <span>🌇 <span class="fc-sun-val" id="fc-sunset">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONE GRID — statikus HTML, JS csak az adatokat frissíti -->
+    <div class="zone-grid">
+
+      <!-- KÜLTÉR — 2 szegmens: Kültér B · Kültér A -->
+      <div class="zcard z-outdoor g-mild" id="z-kulter">
+        <div class="top-segs">
+          <div class="seg" id="seg-kulter-0"></div>
+          <div class="seg" id="seg-kulter-1"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zout-left">
+          <div class="zout-name">Kültér</div>
+          <div class="zout-temp" id="z-kulter-temp">—</div>
+          <div class="zout-meta">💧<span id="z-kulter-rh">—</span></div>
+        </div>
+        <div class="zout-hint">
+          <span class="hint-ico" id="z-kulter-hico">❓</span>
+          <span class="hint-txt" id="z-kulter-htxt">—</span>
+        </div>
+        <div class="zout-right">
+          <div class="zout-wind">💨 <span id="z-kulter-wind">—</span></div>
+          <div class="zout-wind">⬆ <span id="z-kulter-gust">—</span></div>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- NAPPALI — 5 szegmens: Előszoba · Étkező · Konyha · Nappali · Dolgozó -->
+      <div class="zcard z-nappali" id="z-nappali">
+        <div class="top-segs">
+          <div class="seg" id="seg-nap-0"></div>
+          <div class="seg" id="seg-nap-1"></div>
+          <div class="seg" id="seg-nap-2"></div>
+          <div class="seg" id="seg-nap-3"></div>
+          <div class="seg" id="seg-nap-4"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-nappali-body">
+          <div class="znap-left">
+            <div class="zc-head">
+              <span class="zc-name">Nappali</span>
+            </div>
+            <div class="zc-meta">
+              💧<span class="mv" id="z-nappali-rh">—</span>
+              <span class="msep">·</span>
+              🔋<span class="mv" id="z-nappali-bat">—</span>
+            </div>
+          </div>
+          <div class="klima-hint" id="z-nappali-kh">
+            <span class="kh-ico" id="z-nappali-khico">○</span>
+            <span>
+            <span class="kh-label">Klíma</span>
+            <span class="kh-state" id="z-nappali-khstate">—</span>
+            </span>
+          </div>
+          <span class="zc-temp tc-none" id="z-nappali-temp">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- HÁLÓSZOBA — 2 szegmens: Háló 01 · Háló 02 -->
+      <div class="zcard z-small" id="z-halo">
+        <div class="top-segs">
+          <div class="seg" id="seg-halo-0"></div>
+          <div class="seg" id="seg-halo-1"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Hálószoba</span>
+          <span class="zc-temp tc-none" id="z-halo-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-halo-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-halo-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- GYEREKSZOBA — 1 szegmens -->
+      <div class="zcard z-small" id="z-gyerek">
+        <div class="top-segs">
+          <div class="seg" id="seg-gyerek-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Gyerekszoba</span>
+          <span class="zc-temp tc-none" id="z-gyerek-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-gyerek-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-gyerek-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- FÜRDŐSZOBA — 1 szegmens -->
+      <div class="zcard z-small" id="z-furdo">
+        <div class="top-segs">
+          <div class="seg" id="seg-furdo-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">Fürdőszoba</span>
+          <span class="zc-temp tc-none" id="z-furdo-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-furdo-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-furdo-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+      <!-- WC — 1 szegmens -->
+      <div class="zcard z-small" id="z-wc">
+        <div class="top-segs">
+          <div class="seg" id="seg-wc-0"></div>
+        </div>
+        <div class="top-glow"></div>
+        <div class="zc-head">
+          <span class="zc-name">WC</span>
+          <span class="zc-temp tc-none" id="z-wc-temp">—</span>
+        </div>
+        <div class="zc-meta">
+          💧<span class="mv" id="z-wc-rh">—</span>
+          <span class="msep">·</span>
+          🔋<span class="mv" id="z-wc-bat">—</span>
+        </div>
+        <div class="bot-strip"></div>
+        <div class="bot-fill"></div>
+      </div>
+
+    </div><!-- /zone-grid -->
+  </div><!-- /screen -->
+
+  <script src="./uibuilder.iife.min.js"></script>
+  <script src="./index.js?v=20261001b"></script>
+</body>
+
+</html>

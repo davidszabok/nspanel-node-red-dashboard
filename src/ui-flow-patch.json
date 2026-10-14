@@ -1,0 +1,133 @@
+[
+  {
+    "id": "43c4e9a14ccf4200",
+    "type": "function",
+    "z": "901bdeda80413cd9",
+    "name": "Unifier v5.5 — UI freshness",
+    "func": "// ════════════════════════════════════════════════════════════\n//  == FUNCTION NODE: UNIFIER v5.4 ==\n//  Változás v5.3-hoz képest:\n//  - \"gateway\" típus kezelése: DIRIGERA HUB adatok (nextSunSet, nextSunRise, homestate)\n//  - \"motion\" típus kezelése: mozgásérzékelő (detected, room, battery)\n//  Új state ágak: state.gateway, state.motion\n// ════════════════════════════════════════════════════════════\n\nfunction quickHash(obj) {\n    const s = JSON.stringify(obj);\n    let h = 0;\n    for (let i = 0; i < s.length; i++) {\n        h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;\n    }\n    return h;\n}\n\nfunction getState() {\n    const s = global.get(\"dash_state\") || {};\n    if (!s.weather)  s.weather = null;\n    if (!s.ac)       s.ac = null;\n    if (!s.sensors)  s.sensors = {};\n    if (!s.sensors.th)       s.sensors.th = {};\n    if (!s.sensors.switches) s.sensors.switches = {};\n    if (!s.sensors.shutters) s.sensors.shutters = {};\n    if (!s.lights)   s.lights = {};\n    if (!s.lights.bulbs)       s.lights.bulbs = {};\n    if (!s.lights.controllers) s.lights.controllers = {};\n    if (!s.gateway)  s.gateway = null;   // ÚJ: DIRIGERA HUB\n    if (!s.motion)   s.motion = {};      // ÚJ: mozgásérzékelők\n    if (!s._hash)    s._hash = null;\n    return s;\n}\n\n// ── Sonoff mapping ───────────────────────────────────────────\nconst SONOFF_FOR_LIGHT = {\n    \"nappali\":          [{ room: \"nappali\",  label: \"Nappali\" }],\n    \"lego_vitrin\":      [{ room: \"nappali\",  label: \"Dolgozó\" }],\n    \"dolgozo_spot_1\":   [{ room: \"nappali\",  label: \"Dolgozó\" }],\n    \"dolgozo_spot_2\":   [{ room: \"nappali\",  label: \"Dolgozó\" }],\n    \"dolgozo_spot_3\":   [{ room: \"nappali\",  label: \"Dolgozó\" }],\n    \"konyha_spot_1\":    [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"konyha_spot_2\":    [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"konyha_spot_3\":    [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"konyha_spot_4\":    [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"konyhabutor\":      [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"konyhabutor_fiok\": [{ room: \"eloszoba\", label: \"Konyha\" }],\n    \"halo_01\":          [{ room: \"halo\",     label: \"Háló 1\" }, { room: \"halo\", label: \"Háló 2\" }],\n    \"halo_02\":          [{ room: \"halo\",     label: \"Háló 1\" }, { room: \"halo\", label: \"Háló 2\" }],\n    \"gyerek\":           [{ room: \"gyerek\",   label: \"Gyerekszoba\" }],\n    \"eloszoba_bulb_1\":  [{ room: \"eloszoba\", label: \"Előszoba\" }],\n    \"eloszoba_bulb_2\":  [{ room: \"eloszoba\", label: \"Előszoba\" }],\n    \"eloszoba_bulb_3\":  [{ room: \"eloszoba\", label: \"Előszoba\" }],\n    \"technika\":         []   // folyamatos áram\n};\n\nfunction isSonoffOn(sonoffList, switchMap) {\n    if (sonoffList.length === 0) return true;\n    return sonoffList.some(sw => switchMap[sw.room] && switchMap[sw.room][sw.label] === true);\n}\n\n// ════════════════════════════════════════════════════════════\n//  FŐLOGIKA\n// ════════════════════════════════════════════════════════════\nconst state = getState();\nconst p = msg.payload;\nconst receivedAt = Date.now();\nstate._updated = state._updated || {};\nstate._updated.th = state._updated.th || {};\nstate._updated.switches = state._updated.switches || {};\n\nif (p && !Array.isArray(p) && p.type === \"weather\") {\n    const { type, ...data } = p;\n    state.weather = data;\n    state._updated.weather = receivedAt;\n}\nelse if (p && !Array.isArray(p) && p.type === \"ac\") {\n    const { type, ...data } = p;\n    state.ac = data;\n    state._updated.ac = receivedAt;\n}\nelse if (Array.isArray(p)) {\n    const items = p.flatMap(x => Array.isArray(x) ? x : [x]);\n\n    items.forEach(item => {\n        if (!item || !item.type) return;\n\n        switch (item.type) {\n\n            case \"th\":\n                state._updated.th[item.room] = receivedAt;\n                state.sensors.th[item.room] = {\n                    temp:    item.temp,\n                    hum:     item.hum,\n                    battery: item.battery,\n                    online:  item.online\n                };\n                break;\n\n            case \"switch\":\n                state._updated.switches[item.room] = state._updated.switches[item.room] || {};\n                state._updated.switches[item.room][item.label] = receivedAt;\n                if (!state.sensors.switches[item.room]) state.sensors.switches[item.room] = {};\n                state.sensors.switches[item.room][item.label] = item.state;\n                break;\n\n            case \"shutter\": {\n                if (!state.sensors.shutters[item.room]) state.sensors.shutters[item.room] = {};\n                const prev = state.sensors.shutters[item.room][item.label] || {};\n                state.sensors.shutters[item.room][item.label] = {\n                    pct:   (item.pct   != null) ? item.pct   : (prev.pct   ?? null),\n                    motor: (item.motor != null) ? item.motor : (prev.motor ?? null)\n                };\n                break;\n            }\n\n            case \"light\": {\n                const sonoffList = SONOFF_FOR_LIGHT[item.label] ?? null;\n                const sonoffOn = sonoffList === null\n                    ? item.reachable\n                    : isSonoffOn(sonoffList, state.sensors.switches);\n                const isOn = sonoffOn && item.reachable === true && item.on === true;\n\n                if (!state.lights.bulbs[item.room]) state.lights.bulbs[item.room] = {};\n                state.lights.bulbs[item.room][item.label] = {\n                    on:        isOn,\n                    level:     item.level,\n                    reachable: item.reachable,\n                    sonoffOn:  sonoffOn,\n                    ...(item.hue !== undefined ? { hue: item.hue, sat: item.sat, ct: item.ct } : {})\n                };\n                break;\n            }\n\n            case \"controller\":\n                state.lights.controllers[item.label] = {\n                    battery:   item.battery,\n                    reachable: item.reachable\n                };\n                break;\n\n            // ── ÚJ: DIRIGERA HUB ────────────────────────────\n            case \"gateway\":\n                state.gateway = {\n                    reachable:        item.reachable,\n                    backendConnected: item.backendConnected,\n                    homestate:        item.homestate,\n                    nextSunSet:       item.nextSunSet,\n                    nextSunRise:      item.nextSunRise,\n                    timezone:         item.timezone,\n                    firmwareVersion:  item.firmwareVersion\n                };\n                break;\n\n            // ── ÚJ: MOZGÁSÉRZÉKELŐ ──────────────────────────\n            case \"motion\": {\n                // room-kulcs: a dirigera \"Technika\" szobanévből → \"technika\"\n                const roomKey = (item.room || item.label || \"unknown\")\n                    .toLowerCase()\n                    .normalize(\"NFD\")\n                    .replace(/[\\u0300-\\u036f]/g, \"\")\n                    .trim();\n                state.motion[roomKey] = {\n                    detected:  item.detected,\n                    reachable: item.reachable,\n                    battery:   item.battery,\n                    label:     item.label\n                };\n                break;\n            }\n        }\n    });\n}\n\nconst newHash = quickHash({\n    w: state.weather,\n    a: state.ac,\n    s: state.sensors,\n    l: state.lights,\n    g: state.gateway,\n    m: state.motion\n});\n\nif (!msg.injected && newHash === state._hash) return null;\n\nstate._hash = newHash;\nstate._ts = receivedAt;\nglobal.set(\"dash_state\", state);\n\nreturn {\n    payload: {\n        weather: state.weather,\n        ac:      state.ac,\n        sensors: state.sensors,\n        lights:  state.lights,\n        gateway: state.gateway,\n        motion:  state.motion,\n        _ts:     state._ts,\n        _updated: state._updated\n    }\n};\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1300,
+    "y": 660,
+    "wires": [
+      [
+        "3e6ae44921b6ac19",
+        "7172ae21ddbb1580",
+        "2e18f381fa4417ee",
+        "eccc2fe8eebea287"
+      ]
+    ]
+  },
+  {
+    "id": "3e6ae44921b6ac19",
+    "type": "uibuilder",
+    "z": "901bdeda80413cd9",
+    "name": "NsCompact V1.0",
+    "topic": "",
+    "url": "nscompact",
+    "okToGo": true,
+    "fwdInMessages": false,
+    "allowScripts": false,
+    "allowStyles": false,
+    "copyIndex": true,
+    "templateFolder": "blank",
+    "extTemplate": "",
+    "showfolder": false,
+    "reload": true,
+    "sourceFolder": "src",
+    "deployedVersion": "7.5.0",
+    "showMsgUib": false,
+    "title": "",
+    "descr": "",
+    "editurl": "vscode://vscode-remote/ssh-remote+192.0.2.10/data/uibuilder/nscompact/?windowId=_blank",
+    "x": 1590,
+    "y": 660,
+    "wires": [
+      [
+        "a010202600000001"
+      ],
+      [
+        "a010202600000001"
+      ]
+    ]
+  },
+  {
+    "id": "a010202600000001",
+    "type": "function",
+    "z": "901bdeda80413cd9",
+    "name": "UI állapot visszaküldés — nscompact",
+    "func": "// UI-only snapshot replay. Never trigger HVAC or refresh stored timestamps.\nconst request = msg.topic === 'ui/state/request' ||\n    ['client connect', 'ready for content'].includes(msg.uibuilderCtrl) ||\n    msg.cacheControl === 'REPLAY';\nif (!request || typeof msg._socketId !== 'string' || !msg._socketId) return null;\nconst s = global.get('dash_state');\nif (!s) return { topic: 'ui/state/wait', _socketId: msg._socketId, payload: null };\nconst payload = {};\nfor (const key of ['weather','ac','sensors','lights','gateway','motion','_ts','_updated']) {\n    if (s[key] !== undefined) payload[key] = s[key];\n}\nreturn { topic: 'ui/state', _socketId: msg._socketId,\n    payload: JSON.parse(JSON.stringify(payload)) };",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1870,
+    "y": 580,
+    "wires": [
+      [
+        "3e6ae44921b6ac19"
+      ]
+    ]
+  },
+  {
+    "id": "2e18f381fa4417ee",
+    "type": "uibuilder",
+    "z": "901bdeda80413cd9",
+    "name": "NS desktop",
+    "topic": "",
+    "url": "nsdesktop2",
+    "okToGo": true,
+    "fwdInMessages": false,
+    "allowScripts": false,
+    "allowStyles": false,
+    "copyIndex": true,
+    "templateFolder": "blank",
+    "extTemplate": "",
+    "showfolder": false,
+    "reload": false,
+    "sourceFolder": "src",
+    "deployedVersion": "7.5.0",
+    "showMsgUib": false,
+    "title": "",
+    "descr": "",
+    "editurl": "vscode://vscode-remote/ssh-remote+192.0.2.10/data/uibuilder/nsdesktop2/?windowId=_blank",
+    "x": 1580,
+    "y": 720,
+    "wires": [
+      [
+        "5e591a6065cbab1c",
+        "a010202600000002"
+      ],
+      [
+        "5e591a6065cbab1c",
+        "a010202600000002"
+      ]
+    ]
+  },
+  {
+    "id": "a010202600000002",
+    "type": "function",
+    "z": "901bdeda80413cd9",
+    "name": "UI állapot visszaküldés — nsdesktop2",
+    "func": "// UI-only snapshot replay. Never trigger HVAC or refresh stored timestamps.\nconst request = msg.topic === 'ui/state/request' ||\n    ['client connect', 'ready for content'].includes(msg.uibuilderCtrl) ||\n    msg.cacheControl === 'REPLAY';\nif (!request || typeof msg._socketId !== 'string' || !msg._socketId) return null;\nconst s = global.get('dash_state');\nif (!s) return { topic: 'ui/state/wait', _socketId: msg._socketId, payload: null };\nconst payload = {};\nfor (const key of ['weather','ac','sensors','lights','gateway','motion','_ts','_updated']) {\n    if (s[key] !== undefined) payload[key] = s[key];\n}\nreturn { topic: 'ui/state', _socketId: msg._socketId,\n    payload: JSON.parse(JSON.stringify(payload)) };",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1870,
+    "y": 800,
+    "wires": [
+      [
+        "2e18f381fa4417ee"
+      ]
+    ]
+  }
+]

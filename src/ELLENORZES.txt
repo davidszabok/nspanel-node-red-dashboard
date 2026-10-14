@@ -1,0 +1,23 @@
+PASS empty server returns targeted waiting message
+PASS unifier retains original data contract and adds freshness
+PASS replay preserves timestamp and targets only requesting socket
+PASS connect, reconnect and explicit request replay
+PASS no broadcast, disconnect replay or data loop
+PASS new light data cannot refresh old temperature timestamp
+PASS partial heating relay updates do not refresh missing channels
+PASS flow patch only changes UI and unifier, no HVAC nodes
+PASS already-connected IIFE requests initial state
+PASS late connection requests initial state
+PASS startup retries when server has no state
+PASS disconnect and reconnect update status and request again
+PASS numeric strings render and storage failure is nonfatal
+PASS invalid numeric temperatures cannot throw
+PASS cached snapshot labelled as saved and heat not asserted live
+PASS missing library visible instead of green status
+PASS corrupt local cache is ignored
+PASS staleness ages even without new messages
+PASS forecast cells clear when forecast shrinks
+PASS offline sensor explicitly labelled
+PASS original APPLY suppresses identical failed command retry
+PASS original normalizer converts null temperature to zero
+22 checks passed. Simulated runtime; physical panel and Node-RED deployment not tested.
