@@ -6,6 +6,8 @@ A projekt a UI forrását és a Node-RED oldali állapot-visszaküldő javítás
 
 ![NSPanel UI előnézet mintaadatokkal](assets/UI-elonezet.jpg)
 
+Az eredeti telepítés Sonoff iHostot, két Sonoff 4CH PRO R3 fűtési relét, Sonoff SNZB-02P/SNZB-02D szenzorokat, Sonoff TX Ultimate kapcsolókat, IKEA DIRIGERA/BILRESA/STYRBAR/TRÅDFRI eszközöket és MELCloudon keresztül vezérelt Mitsubishi MSZ-AY35 klímát használ. A részletes hardverjegyzék a [kapcsolódó HVAC repositoryban](https://github.com/davidszabok/node-red-hvac-reporting-legacy/blob/main/docs/HARDWARE_HU.md) található.
+
 ## Fő képességek
 
 - reszponzív, 480×480-ra optimalizált, sötét „glass” felület;
